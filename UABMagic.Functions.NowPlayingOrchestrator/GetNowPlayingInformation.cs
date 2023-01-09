@@ -6,16 +6,19 @@ public class GetNowPlayingInformation
     private readonly INowPlayingService _nowPlayingService;
     private readonly IPushTokenService _pushTokenService;
     private readonly IQueueMessageService _queueMessageService;
+    private readonly ITopTenCountdownService _topTenCountdownService;
 
     public GetNowPlayingInformation(IGoogleFCMService googleFCMService,
         INowPlayingService nowPlayingService,
         IPushTokenService pushTokenService,
-        IQueueMessageService queueMessageService)
+        IQueueMessageService queueMessageService,
+        ITopTenCountdownService topTenCountdownService)
     {
         _googleFCMService = googleFCMService ?? throw new ArgumentNullException(nameof(googleFCMService));
         _nowPlayingService = nowPlayingService ?? throw new ArgumentNullException(nameof(nowPlayingService));
         _pushTokenService = pushTokenService ?? throw new ArgumentNullException(nameof(pushTokenService));
         _queueMessageService = queueMessageService ?? throw new ArgumentNullException(nameof(queueMessageService));
+        _topTenCountdownService = topTenCountdownService ?? throw new ArgumentNullException(nameof(topTenCountdownService));
     }
 
     [FunctionName("GetNowPlayingInformation")]
@@ -38,7 +41,7 @@ public class GetNowPlayingInformation
             if (shouldCreateMessages)
             {
                 await CreateRequestQueueMessagesAsync(nowPlayingSong);
-                await CreateTopTenCountdownMessageAsync(nowPlayingSong);
+                await _topTenCountdownService.ProcessTopTenSongAsync(nowPlayingSong);
             }
 
             var getNowPlayingQueueMessage = new GetNowPlayingQueueMessage
@@ -185,37 +188,6 @@ public class GetNowPlayingInformation
         {
             await _queueMessageService.CreateQueueMessageAsync(queueMessage, QueueConstants.RequestsQueue);
         }
-    }
-
-    private async Task CreateTopTenCountdownMessageAsync(NowPlayingSong nowPlayingSong)
-    {
-        if (!nowPlayingSong.IsWeeklyCountdown) return;
-
-        const string withString = " with ";
-
-        var countdownIndex = int.Parse(nowPlayingSong.Schedule[..nowPlayingSong.Schedule.IndexOf(withString)]
-            .Replace("Weekly Top Ten Countdown #", string.Empty)
-            .Trim());
-
-        var requests = int.Parse(nowPlayingSong.Schedule[nowPlayingSong.Schedule.IndexOf(withString)..]
-            .Replace(withString, string.Empty)
-            .Replace(" request - Hosted By BoundlessRealm", string.Empty)
-            .Replace(" requests - Hosted By BoundlessRealm", string.Empty)
-            .Replace(" Request - Hosted By BoundlessRealm", string.Empty)
-            .Replace(" Requests - Hosted By BoundlessRealm", string.Empty)
-            .Trim());
-
-        var requestors = nowPlayingSong.Requestor.Split(" / ").ToList();
-
-        var topTenCountdownQueueMessage = new TopTenCountdownQueueMessage
-        {
-            Index = countdownIndex,
-            NowPlayingSong = nowPlayingSong,
-            Requests = requests,
-            Requestors = requestors
-        };
-
-        await _queueMessageService.CreateQueueMessageAsync(topTenCountdownQueueMessage, QueueConstants.TopTenCountdownQueue);
     }
 
     private async Task HandleUABYourWayShowMessageAsync(NowPlayingSong nowPlayingSong, GetNowPlayingQueueMessage queueItem)

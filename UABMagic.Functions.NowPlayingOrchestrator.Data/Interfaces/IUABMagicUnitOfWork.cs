@@ -3,4 +3,5 @@
 public interface IUABMagicUnitOfWork
 {
     IPushTokenRepository PushTokenRepository { get; }
+    ITopTenCountdownSongRepository TopTenCountdownSongRepository { get; }
 }

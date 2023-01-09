@@ -3,4 +3,6 @@
 public interface IRepository<TEntity> where TEntity : BaseModel, new()
 {
     Task<IReadOnlyList<TEntity>> GetAllAsync();
+
+    Task AddEntityAsync(TEntity entity);
 }

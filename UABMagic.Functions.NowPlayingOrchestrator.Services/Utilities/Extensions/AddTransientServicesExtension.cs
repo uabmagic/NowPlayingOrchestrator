@@ -9,5 +9,6 @@ public static class AddTransientServicesExtension
         services.AddTransient<INowPlayingService, NowPlayingService>();
         services.AddTransient<IPushTokenService, PushTokenService>();
         services.AddTransient<IQueueMessageService, QueueMessageService>();
+        services.AddTransient<ITopTenCountdownService, TopTenCountdownService>();
     }
 }

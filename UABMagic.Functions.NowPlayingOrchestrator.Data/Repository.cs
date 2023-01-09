@@ -21,4 +21,13 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : BaseMode
 
         return results.Models;
     }
+
+    public async Task AddEntityAsync(TEntity entity)
+    {
+        var client = new Supabase.Client(_supabaseUrl, _supabaseKey);
+
+        await client.InitializeAsync();
+
+        await client.From<TEntity>().Insert(entity);
+    }
 }
