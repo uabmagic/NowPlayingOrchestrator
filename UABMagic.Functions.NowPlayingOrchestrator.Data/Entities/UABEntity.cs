@@ -1,8 +1,8 @@
 ﻿namespace UABMagic.Functions.NowPlayingOrchestrator.Data.Entities;
 
 [ExcludeFromCodeCoverage]
-public class UABEntity
+public class UABEntity : BaseModel
 {
-    public DateTime CreatedDate { get; set; }
-    public DateTime UpdatedDate { get; set; }
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }
 }

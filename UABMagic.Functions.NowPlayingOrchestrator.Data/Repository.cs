@@ -1,30 +1,24 @@
 ﻿namespace UABMagic.Functions.NowPlayingOrchestrator.Data;
 
-public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
+public class Repository<TEntity> : IRepository<TEntity> where TEntity : BaseModel, new()
 {
-    private readonly string? _databaseConnectionString;
+    private readonly string _supabaseKey;
+    private readonly string _supabaseUrl;
 
     public Repository()
     {
-        _databaseConnectionString = Environment.GetEnvironmentVariable(Constants.DatabaseConnectionString);
+        _supabaseKey = Environment.GetEnvironmentVariable(Constants.SupabaseKey) ?? string.Empty;
+        _supabaseUrl = Environment.GetEnvironmentVariable(Constants.SupabaseURL) ?? string.Empty;
     }
 
     public async Task<IReadOnlyList<TEntity>> GetAllAsync()
     {
-        using var sqlConnection = new SqlConnection(_databaseConnectionString);
+        var client = new Supabase.Client(_supabaseUrl, _supabaseKey);
 
-        sqlConnection.Open();
+        await client.InitializeAsync();
 
-        var sql = $"select * from {EntityTableName}";
-        var result = await sqlConnection.QueryAsync<TEntity>(sql);
+        var results = await client.From<TEntity>().Get();
 
-        return result.ToList();
+        return results.Models;
     }
-
-    public Task<TEntity> GetByIdAsync(int id)
-    {
-        throw new NotImplementedException();
-    }
-
-    private string EntityTableName => $"{typeof(TEntity).Name}s";
 }
