@@ -26,5 +26,5 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
         throw new NotImplementedException();
     }
 
-    private string EntityTableName => $"{typeof(TEntity)}s";
+    private string EntityTableName => $"{typeof(TEntity).Name}s";
 }
