@@ -3,19 +3,18 @@ name: Deploy NowPlayingOrchestrator
 on: [push]
 
 env:
-  AZURE_FUNCTIONAPP_NAME: as-northcentralus-uabmagic-func-nowplayingorch-01
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
-  DOTNET_VERSION: '2.2.402'
+  DOTNET_VERSION: '6.x'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout GitHub action'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -28,6 +27,6 @@ jobs:
       - name: 'Run Azure Functions action'
         uses: Azure/functions-action@v1
         with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
