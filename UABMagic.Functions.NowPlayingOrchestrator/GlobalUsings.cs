@@ -1,0 +1,20 @@
+﻿global using System;
+global using System.Collections.Generic;
+global using System.Diagnostics.CodeAnalysis;
+global using System.Linq;
+global using System.Threading.Tasks;
+global using FirebaseAdmin;
+global using Google.Apis.Auth.OAuth2;
+global using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+global using Microsoft.Azure.WebJobs;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
+global using Polly;
+
+global using UABMagic.Functions.NowPlayingOrchestrator.Core.Constants;
+global using UABMagic.Functions.NowPlayingOrchestrator.Data.Utilities.Extensions;
+global using UABMagic.Functions.NowPlayingOrchestrator.Services.DTOs.GoogleFCM;
+global using UABMagic.Functions.NowPlayingOrchestrator.Services.DTOs.Songs;
+global using UABMagic.Functions.NowPlayingOrchestrator.Services.Interfaces;
+global using UABMagic.Functions.NowPlayingOrchestrator.Services.QueueMessages;
+global using UABMagic.Functions.NowPlayingOrchestrator.Services.Utilities.Extensions;
