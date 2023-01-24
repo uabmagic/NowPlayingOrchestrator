@@ -60,6 +60,9 @@ public class GetNowPlayingInformation
         catch (Exception e)
         {
             log.LogError(e, $"GetNowPlayingInformation: {e.Message}");
+
+            // There might be a problem with the API, so create another message to check in 15 seconds
+            await CreateBasicQueueMessage();
         }
     }
 
@@ -212,6 +215,22 @@ public class GetNowPlayingInformation
 
             await _googleFCMService.SendMessageToTokenAsync(tokenMessage);
         }
+    }
+
+    private async Task CreateBasicQueueMessage(int timeUntilMessageAppears = 15)
+    {
+        var basicQueueMessage = new GetNowPlayingQueueMessage
+        {
+            CurrentSchedule = string.Empty,
+            IsUabYourWayShow = false,
+            PreviousSongId = 0
+        };
+
+        await _queueMessageService.CreateQueueMessageAsync(
+            basicQueueMessage,
+            QueueConstants.NowPlayingQueue,
+            timeUntilMessageAppears
+        );
     }
 
     private static string FormatNowPlayingSongForMessage(string attractionAndSong, string themeParkAndLand) =>
