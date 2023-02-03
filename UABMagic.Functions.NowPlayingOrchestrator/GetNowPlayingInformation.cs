@@ -7,18 +7,21 @@ public class GetNowPlayingInformation
     private readonly IPushTokenService _pushTokenService;
     private readonly IQueueMessageService _queueMessageService;
     private readonly ITopTenCountdownService _topTenCountdownService;
+    private readonly IYourWayShowService _yourWayShowService;
 
     public GetNowPlayingInformation(IGoogleFCMService googleFCMService,
         INowPlayingService nowPlayingService,
         IPushTokenService pushTokenService,
         IQueueMessageService queueMessageService,
-        ITopTenCountdownService topTenCountdownService)
+        ITopTenCountdownService topTenCountdownService,
+        IYourWayShowService yourWayShowService)
     {
         _googleFCMService = googleFCMService ?? throw new ArgumentNullException(nameof(googleFCMService));
         _nowPlayingService = nowPlayingService ?? throw new ArgumentNullException(nameof(nowPlayingService));
         _pushTokenService = pushTokenService ?? throw new ArgumentNullException(nameof(pushTokenService));
         _queueMessageService = queueMessageService ?? throw new ArgumentNullException(nameof(queueMessageService));
         _topTenCountdownService = topTenCountdownService ?? throw new ArgumentNullException(nameof(topTenCountdownService));
+        _yourWayShowService = yourWayShowService ?? throw new ArgumentNullException(nameof(yourWayShowService));
     }
 
     [FunctionName("GetNowPlayingInformation")]
@@ -31,9 +34,10 @@ public class GetNowPlayingInformation
         {
             var nowPlayingSong = await _nowPlayingService.GetNowPlayingSongAsync();
 
-            await HandleUABYourWayShowMessageAsync(nowPlayingSong, queueItem);
+            await _yourWayShowService.HandleUABYourWayShowMessageAsync(nowPlayingSong, queueItem);
 
-            var shouldCreateMessages = nowPlayingSong.Id.HasValue
+            var shouldCreateMessages = !queueItem.SiteIsInErrorState
+                && nowPlayingSong.Id.HasValue
                 && nowPlayingSong.Id.Value != 0
                 && queueItem.PreviousSongId.HasValue
                 && queueItem.PreviousSongId.Value != nowPlayingSong.Id.Value;
@@ -48,7 +52,8 @@ public class GetNowPlayingInformation
             {
                 CurrentSchedule = nowPlayingSong.Schedule,
                 IsUabYourWayShow = nowPlayingSong.IsUabYourWayShow,
-                PreviousSongId = nowPlayingSong.Id.GetValueOrDefault()
+                PreviousSongId = nowPlayingSong.Id.GetValueOrDefault(),
+                SiteIsInErrorState = false
             };
 
             await _queueMessageService.CreateQueueMessageAsync(
@@ -193,37 +198,14 @@ public class GetNowPlayingInformation
         }
     }
 
-    private async Task HandleUABYourWayShowMessageAsync(NowPlayingSong nowPlayingSong, GetNowPlayingQueueMessage queueItem)
-    {
-        if (nowPlayingSong.IsUabYourWayShow && !queueItem.IsUabYourWayShow)
-        {
-            var userPushToken = await _pushTokenService.GetPushTokenByUsernameAsync(nowPlayingSong.UabYourWayUser);
-
-            if (string.IsNullOrEmpty(userPushToken)) return;
-
-            var tokenMessage = new TokenMessage
-            {
-                Body = "Your Favorites List is playing for the UAB Your Way Show!",
-                Data = new Dictionary<string, string>
-                {
-                    { "username", nowPlayingSong.UabYourWayUser }
-                },
-                ImageUrl = "https://uabmagic.azureedge.net/images/profhotz.jpg",
-                Title = "UAB Your Way Show",
-                Token = userPushToken
-            };
-
-            await _googleFCMService.SendMessageToTokenAsync(tokenMessage);
-        }
-    }
-
     private async Task CreateBasicQueueMessage(int timeUntilMessageAppears = 15)
     {
         var basicQueueMessage = new GetNowPlayingQueueMessage
         {
             CurrentSchedule = string.Empty,
             IsUabYourWayShow = false,
-            PreviousSongId = 0
+            PreviousSongId = 0,
+            SiteIsInErrorState = true
         };
 
         await _queueMessageService.CreateQueueMessageAsync(

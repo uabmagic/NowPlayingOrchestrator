@@ -10,5 +10,6 @@ public static class AddTransientServicesExtension
         services.AddTransient<IPushTokenService, PushTokenService>();
         services.AddTransient<IQueueMessageService, QueueMessageService>();
         services.AddTransient<ITopTenCountdownService, TopTenCountdownService>();
+        services.AddTransient<IYourWayShowService, YourWayShowService>();
     }
 }

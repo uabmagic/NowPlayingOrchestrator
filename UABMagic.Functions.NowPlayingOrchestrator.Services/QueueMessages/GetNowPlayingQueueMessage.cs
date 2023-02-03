@@ -6,4 +6,5 @@ public class GetNowPlayingQueueMessage
     public string? CurrentSchedule { get; set; }
     public bool IsUabYourWayShow { get; set; }
     public int? PreviousSongId { get; set; }
+    public bool SiteIsInErrorState { get; set; }
 }

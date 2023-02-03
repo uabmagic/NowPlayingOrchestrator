@@ -1,6 +1,6 @@
 ﻿namespace UABMagic.Functions.NowPlayingOrchestrator.Data;
 
-public class Repository<TEntity> : IRepository<TEntity> where TEntity : BaseModel, new()
+public class Repository<TEntity> : IRepository<TEntity> where TEntity : UABEntity, new()
 {
     private readonly string _supabaseKey;
     private readonly string _supabaseUrl;
@@ -24,6 +24,11 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : BaseMode
 
     public async Task AddEntityAsync(TEntity entity)
     {
+        if (entity is UABEntity)
+        {
+            entity.CreatedAt = DateTime.Now.ToUniversalTime();
+        }
+
         var client = new Supabase.Client(_supabaseUrl, _supabaseKey);
 
         await client.InitializeAsync();
